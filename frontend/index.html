@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"> <!-- root HTML element -->
+<head>
+  <meta charset="UTF-8" /> <!-- metadata -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Maria Gabriela Yanes">
+    <meta name="designer" content="Database">
+    <meta name="organization" content="riwi">
+    <meta name="description" content="database_payments">
+    <meta name="keywords" content="database, mysql, js, html">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ExpertSoft - Invoices Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { padding: 20px; }
+    .required::after { content: '*'; color: #d00; margin-left: 3px; }
+  </style>
+</head>
+<body> <!-- page body: visible content and scripts -->
+  <div class="container">
+    <h1 class="mb-4">Invoices Dashboard</h1>
+    <div class="mb-3 d-flex gap-2"> <!-- layout container element -->
+      <button id="btnNew" class="btn btn-primary">New Invoice</button>
+      <button id="btnRefresh" class="btn btn-secondary">Refresh</button>
+      <button id="btnLoad" class="btn btn-success">Load CSVs (backend)</button>
+    </div>
+    <div id="alerts"></div>
+    <table class="table table-striped" id="tblInvoices">
+      <thead><tr><th>ID</th><th>Invoice #</th><th>Client</th><th>Billed</th><th>Paid</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- Modal form for Create / Edit -->
+  <div class="modal" tabindex="-1" id="invoiceModal"> <!-- layout container element -->
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle">New Invoice</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"> <!-- layout container element -->
+          <form id="invoiceForm">
+            <input type="hidden" id="invoice_id" />
+            <div class="mb-3">
+              <label class="form-label required">Invoice Number</label>
+              <input id="invoice_number" class="form-control" required maxlength="100" />
+            </div>
+            <div class="mb-3"> <!-- layout container element -->
+              <label class="form-label required">Client ID</label>
+              <input id="client_id" type="number" class="form-control" required min="1" />
+            </div>
+            <div class="mb-3"> <!-- layout container element -->
+              <label class="form-label">Billing Period</label>
+              <input id="billing_period" type="date" class="form-control" />
+            </div>
+            <div class="mb-3"> <!-- more layout container element -->
+              <label class="form-label required">Billed Amount</label>
+              <input id="billed_amount" type="number" class="form-control" required min="0" step="0.01" />
+            </div>
+            <div class="mb-3"> <!-- and more-->
+              <label class="form-label">Paid Amount</label>
+              <input id="paid_amount" type="number" class="form-control" min="0" step="0.01" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select id="status" class="form-select">
+                <option>Pending</option>
+                <option>Partial</option>
+                <option>Complete</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="saveBtn" class="btn btn-primary">Save</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const apiBase = '';// same origin
+    const tbl = document.querySelector('#tblInvoices tbody');
+    const modalEl = document.getElementById('invoiceModal');
+    const modal = new bootstrap.Modal(modalEl);
+    const form = document.getElementById('invoiceForm');
+
+    async function fetchInvoices() {
+      const res = await fetch('/api/invoices');
+      const data = await res.json();
+      tbl.innerHTML = '';
+      data.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i.invoice_id}</td>
+          <td>${i.invoice_number}</td>
+          <td>${i.client_name || i.client_id || ''}</td>
+          <td>${i.billed_amount}</td>
+          <td>${i.paid_amount}</td>
+          <td>${i.status}</td>
+          <td>
+            <button class="btn btn-sm btn-info" onclick="onEdit(${i.invoice_id})">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="onDelete(${i.invoice_id})">Delete</button>
+          </td>`;
+        tbl.appendChild(tr);
+      });
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', fetchInvoices);
+    document.getElementById('btnNew').addEventListener('click', () => {
+      document.getElementById('modalTitle').innerText = 'New Invoice';
+      form.reset();
+      document.getElementById('invoice_id').value = '';
+      modal.show();
+    });
+    document.getElementById('btnLoad').addEventListener('click', async () => {
+      try {
+        const r = await fetch('/api/upload-csv', { method: 'POST' });
+        const j = await r.json();
+        Swal.fire('CSV Load', JSON.stringify(j), 'info');
+        fetchInvoices();
+      } catch (err) {
+        Swal.fire('Error', err.toString(), 'error');
+      }
+    });
+
+    async function onEdit(id) {
+      const r = await fetch('/api/invoices/' + id);
+      if (!r.ok) return Swal.fire('Error','Invoice not found','error');
+      const data = await r.json();
+      document.getElementById('modalTitle').innerText = 'Edit Invoice #' + id;
+      document.getElementById('invoice_id').value = data.invoice_id;
+      document.getElementById('invoice_number').value = data.invoice_number;
+      document.getElementById('client_id').value = data.client_id;
+      document.getElementById('billing_period').value = data.billing_period ? data.billing_period.split('T')[0] : '';
+      document.getElementById('billed_amount').value = data.billed_amount;
+      document.getElementById('paid_amount').value = data.paid_amount;
+      document.getElementById('status').value = data.status;
+      modal.show();
+    }
+
+    async function onDelete(id) {
+      const res = await Swal.fire({
+        title: 'Delete invoice?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+      });
+      if (!res.isConfirmed) return;
+      await fetch('/api/invoices/' + id, { method: 'DELETE' });
+      Swal.fire('Deleted','Invoice deleted','success');
+      fetchInvoices();
+    }
+
+    // Basic client-side validation and save (create or update)
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      // simple validation
+      const invoice_number = document.getElementById('invoice_number').value.trim();
+      const client_id = parseInt(document.getElementById('client_id').value);
+      const billed_amount = parseFloat(document.getElementById('billed_amount').value) || 0;
+      if (!invoice_number) return Swal.fire('Validation','Invoice number is required','error');
+      if (!client_id || client_id <= 0) return Swal.fire('Validation','Client ID must be a positive number','error');
+      if (billed_amount < 0) return Swal.fire('Validation','Billed amount must be >= 0','error');
+
+      const payload = {
+        invoice_number,
+        client_id,
+        billing_period: document.getElementById('billing_period').value || null,
+        billed_amount,
+        paid_amount: parseFloat(document.getElementById('paid_amount').value) || 0,
+        status: document.getElementById('status').value || 'Pending'
+      };
+
+      const id = document.getElementById('invoice_id').value;
+      try {
+        let res, json;
+        if (id) {
+          res = await fetch('/api/invoices/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          json = await res.json();
+          Swal.fire('Updated','Invoice updated successfully','success');
+        } else {
+          res = await fetch('/api/invoices', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          json = await res.json();
+          Swal.fire('Created','Invoice created successfully','success');
+        }
+        modal.hide();
+        fetchInvoices();
+      } catch (err) {
+        Swal.fire('Error', err.toString(), 'error');
+      }
+    });
+
+    // Load initial data
+    fetchInvoices();
+  </script>
+</body>
+</html>

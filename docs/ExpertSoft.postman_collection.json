@@ -1,0 +1,208 @@
+{
+  "info": {
+    "name": "ExpertSoft-Fintech-Full",
+    "_postman_id": "expertsoft-full-1",
+    "description": "Full collection for ExpertSoft project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List invoices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "invoices"
+          ]
+        },
+        "description": "List all invoices"
+      }
+    },
+    {
+      "name": "Get invoice",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "invoices",
+            ":id"
+          ]
+        },
+        "description": "Get invoice by id (replace :id)"
+      }
+    },
+    {
+      "name": "Create invoice",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_number\": \"FAC2025-100\",\n  \"client_id\": 1,\n  \"billing_period\": \"2025-08-01\",\n  \"billed_amount\": 120000,\n  \"paid_amount\": 0,\n  \"status\": \"Pending\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "invoices"
+          ]
+        },
+        "description": "Create invoice"
+      }
+    },
+    {
+      "name": "Update invoice",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice_number\": \"FAC2025-100\",\n  \"client_id\": 1,\n  \"billing_period\": \"2025-08-01\",\n  \"billed_amount\": 120000,\n  \"paid_amount\": 60000,\n  \"status\": \"Partial\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "invoices",
+            "1"
+          ]
+        },
+        "description": "Update invoice id=1"
+      }
+    },
+    {
+      "name": "Delete invoice",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/invoices/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "invoices",
+            "1"
+          ]
+        },
+        "description": "Delete invoice id=1"
+      }
+    },
+    {
+      "name": "Total paid per client",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/total-paid-per-client",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "total-paid-per-client"
+          ]
+        },
+        "description": "Total paid per client"
+      }
+    },
+    {
+      "name": "Pending invoices",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/pending-invoices",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "pending-invoices"
+          ]
+        },
+        "description": "Pending invoices with client & transaction info"
+      }
+    },
+    {
+      "name": "Transactions by platform",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/transactions-by-platform?platform=Nequi",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "query": [
+            {
+              "key": "platform",
+              "value": "Nequi"
+            }
+          ],
+          "path": [
+            "api",
+            "reports",
+            "transactions-by-platform"
+          ]
+        },
+        "description": "Transactions filtered by platform name"
+      }
+    },
+    {
+      "name": "Trigger CSV loader",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/upload-csv",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "upload-csv"
+          ]
+        },
+        "description": "Trigger CSV loader on server"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ]
+}
